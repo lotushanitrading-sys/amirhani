@@ -3,155 +3,100 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>رهگیری لحظه‌ای مرسولات پست ایران</title>
+    <title>رهگیری مرسوله پست ایران</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
-  <body class="app-body">
-    <div class="background">
-      <div class="orb orb-one"></div>
-      <div class="orb orb-two"></div>
-      <div class="orb orb-three"></div>
-    </div>
-
-    <main class="layout">
-      <header class="hero card">
-        <div class="hero-content">
-          <span class="hero-pill">سرویس هوشمند رهگیری</span>
-          <h1>رهگیری سریع و دقیق مرسولات پست ایران</h1>
-          <p>
-            با وارد کردن کد رهگیری مرسوله، وضعیت لحظه‌ای آن را همراه با جزئیات
-            کامل مسیر مشاهده کنید. طراحی این سرویس به صورت کاملاً واکنش‌گرا و
-            با انیمیشن‌های پویا انجام شده است تا تجربه‌ای دلنشین داشته باشید.
-          </p>
-        </div>
-        <div class="hero-visual"></div>
+  <body>
+    <main class="container">
+      <header>
+        <h1>رهگیری مرسوله پست ایران</h1>
+        <p class="subtitle">
+          کد رهگیری مرسوله خود را وارد کنید تا وضعیت لحظه‌ای آن نمایش داده شود.
+        </p>
       </header>
 
-      <section class="card form-card">
-        <form id="tracking-form" method="post" novalidate class="tracking-form">
-          <label for="barcode" class="field-label">کد رهگیری مرسوله</label>
-          <div class="field-group">
+      <section class="tracker-form">
+        <form method="post" novalidate>
+          <label for="barcode">کد رهگیری</label>
+          <div class="input-group">
             <input
               type="text"
               id="barcode"
               name="barcode"
-              maxlength="30"
+              maxlength="24"
               placeholder="مثال: 12345678901234567890"
               value="{{ barcode|default('') }}"
-              autocomplete="off"
               required
-              inputmode="numeric"
-              pattern="[0-9]+"
             />
-            <button type="submit" class="primary-button">
-              <span>رهگیری مرسوله</span>
-              <span class="button-glow" aria-hidden="true"></span>
-            </button>
+            <button type="submit">جستجو</button>
           </div>
-          <p class="form-hint">کد رهگیری شما تنها باید شامل اعداد باشد.</p>
         </form>
-        <div class="alert-wrapper">
-          <div
-            class="alert alert-error"
-            role="alert"
-            data-error
-            {% if not error %}hidden{% endif %}
-          >
-            {{ error }}
-          </div>
-          <div class="alert alert-success" data-success hidden></div>
-        </div>
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
       </section>
 
-      <section
-        class="card results-card"
-        data-results
-        {% if not result and not error %}hidden{% endif %}
-      >
-        <div class="results-header">
-          <h2>نتایج رهگیری</h2>
-          <p class="muted">تمامی اطلاعات به صورت لحظه‌ای از سرویس رسمی پست ایران دریافت می‌شود.</p>
-        </div>
-
-        <div class="summary-grid" data-summary>
-          {% if result %}
-          <div class="summary-item reveal">
-            <span class="summary-label">کد رهگیری</span>
-            <span class="summary-value">{{ result.barcode }}</span>
-          </div>
+      {% if result %}
+      <section class="summary">
+        <h2>خلاصه وضعیت</h2>
+        <ul>
+          <li><strong>کد رهگیری:</strong> {{ result.barcode }}</li>
           {% if result.current_status %}
-          <div class="summary-item reveal">
-            <span class="summary-label">وضعیت فعلی</span>
-            <span class="summary-value">{{ result.current_status }}</span>
-          </div>
+          <li><strong>وضعیت فعلی:</strong> {{ result.current_status }}</li>
           {% endif %}
           {% if result.sender %}
-          <div class="summary-item reveal">
-            <span class="summary-label">فرستنده</span>
-            <span class="summary-value">{{ result.sender }}</span>
-          </div>
+          <li><strong>فرستنده:</strong> {{ result.sender }}</li>
           {% endif %}
           {% if result.receiver %}
-          <div class="summary-item reveal">
-            <span class="summary-label">گیرنده</span>
-            <span class="summary-value">{{ result.receiver }}</span>
-          </div>
+          <li><strong>گیرنده:</strong> {{ result.receiver }}</li>
           {% endif %}
-          {% endif %}
-        </div>
+        </ul>
+      </section>
 
-        <div class="timeline" data-timeline>
-          {% if result and result.events %}
-          <ol class="timeline-list">
-            {% for event in result.events %}
-            <li class="timeline-item reveal">
-              <div class="timeline-meta">
-                <span class="timeline-date">{{ event.date or '-' }}</span>
-                <span class="timeline-time">{{ event.time or '-' }}</span>
-              </div>
-              <div class="timeline-content">
-                <h3>{{ event.description }}</h3>
-                <p class="muted">{{ event.location or 'مکان نامشخص' }}</p>
-              </div>
-            </li>
-            {% endfor %}
-          </ol>
-          {% else %}
-          <div class="empty-state" data-empty>
-            <h3>هنوز اطلاعاتی ثبت نشده است</h3>
-            <p>پس از ثبت اولین رویداد برای مرسوله، جزئیات در این بخش نمایش داده می‌شود.</p>
-          </div>
-          {% endif %}
+      <section class="events">
+        <h2>جزئیات رهگیری</h2>
+        {% if result.events %}
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>تاریخ</th>
+                <th>ساعت</th>
+                <th>مکان</th>
+                <th>شرح وضعیت</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for event in result.events %}
+              <tr>
+                <td>{{ event.date or '-' }}</td>
+                <td>{{ event.time or '-' }}</td>
+                <td>{{ event.location or '-' }}</td>
+                <td>{{ event.description }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
+        {% else %}
+        <p>اطلاعاتی برای نمایش وجود ندارد.</p>
+        {% endif %}
+      </section>
 
-        <details class="raw-response" data-raw {% if not result %}hidden{% endif %}>
-          <summary>نمایش پاسخ کامل سرویس</summary>
-          <pre>{% if result %}{{ result.raw_response | tojson(indent=2, ensure_ascii=False) }}{% endif %}</pre>
+      <section class="raw-response">
+        <details>
+          <summary>مشاهده پاسخ کامل سرویس</summary>
+          <pre>{{ result.raw_response | tojson(indent=2) }}</pre>
         </details>
       </section>
+      {% endif %}
+
+      <footer>
+        <p>
+          این سرویس به صورت متن‌باز و صرفاً جهت سهولت رهگیری مرسولات پست ایران
+          ارائه شده است.
+        </p>
+      </footer>
     </main>
-
-    <div class="loading-overlay" data-loading hidden aria-live="polite" aria-busy="true">
-      <div class="spinner"></div>
-      <p>در حال دریافت اطلاعات از سرویس پست ایران...</p>
-    </div>
-
-    <noscript>
-      <div class="noscript-warning">
-        برای استفاده از امکانات پویا و انیمیشن‌های پیشرفته، لطفاً جاوااسکریپت را فعال کنید. با این حال سامانه همچنان قابل استفاده است.
-      </div>
-    </noscript>
-
-    {% if result %}
-    <script type="application/json" id="initial-tracking">
-      {{ result | tojson(ensure_ascii=False) }}
-    </script>
-    {% endif %}
-    {% if error %}
-    <script type="application/json" id="initial-error">
-      {{ error | tojson(ensure_ascii=False) }}
-    </script>
-    {% endif %}
-    <script defer src="{{ url_for('static', filename='app.js') }}"></script>
   </body>
 </html>

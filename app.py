@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict
-
 from flask import Flask, jsonify, render_template, request
 
-from iranpost_tracker.client import IranPostTracker, TrackingError, TrackingResult
+from iranpost_tracker.client import IranPostTracker, TrackingError
 
 app = Flask(__name__)
 app.json.ensure_ascii = False
@@ -22,25 +20,6 @@ def _validate_barcode(barcode: str) -> str:
     return barcode
 
 
-def _result_to_dict(result: TrackingResult) -> Dict[str, Any]:
-    return {
-        "barcode": result.barcode,
-        "current_status": result.current_status,
-        "sender": result.sender,
-        "receiver": result.receiver,
-        "events": [
-            {
-                "description": event.description,
-                "date": event.date,
-                "time": event.time,
-                "location": event.location,
-            }
-            for event in result.events
-        ],
-        "raw_response": result.raw_response,
-    }
-
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     context = {}
@@ -50,7 +29,7 @@ def index():
             validated_barcode = _validate_barcode(barcode)
             result = tracker.track(validated_barcode)
             context.update({
-                "result": _result_to_dict(result),
+                "result": result,
                 "barcode": validated_barcode,
             })
         except TrackingError as exc:
@@ -68,7 +47,24 @@ def api_track():
     try:
         validated_barcode = _validate_barcode(barcode)
         result = tracker.track(validated_barcode)
-        return jsonify(_result_to_dict(result))
+        return jsonify(
+            {
+                "barcode": result.barcode,
+                "current_status": result.current_status,
+                "sender": result.sender,
+                "receiver": result.receiver,
+                "events": [
+                    {
+                        "description": event.description,
+                        "date": event.date,
+                        "time": event.time,
+                        "location": event.location,
+                    }
+                    for event in result.events
+                ],
+                "raw_response": result.raw_response,
+            }
+        )
     except TrackingError as exc:
         return jsonify({"error": str(exc)}), 400
 
