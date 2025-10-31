@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>رهگیری مرسوله پست ایران</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>رهگیری مرسوله پست ایران</h1>
+        <p class="subtitle">
+          کد رهگیری مرسوله خود را وارد کنید تا وضعیت لحظه‌ای آن نمایش داده شود.
+        </p>
+      </header>
+
+      <section class="tracker-form">
+        <form method="post" novalidate>
+          <label for="barcode">کد رهگیری</label>
+          <div class="input-group">
+            <input
+              type="text"
+              id="barcode"
+              name="barcode"
+              maxlength="24"
+              placeholder="مثال: 12345678901234567890"
+              value="{{ barcode|default('') }}"
+              required
+            />
+            <button type="submit">جستجو</button>
+          </div>
+        </form>
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+      </section>
+
+      {% if result %}
+      <section class="summary">
+        <h2>خلاصه وضعیت</h2>
+        <ul>
+          <li><strong>کد رهگیری:</strong> {{ result.barcode }}</li>
+          {% if result.current_status %}
+          <li><strong>وضعیت فعلی:</strong> {{ result.current_status }}</li>
+          {% endif %}
+          {% if result.sender %}
+          <li><strong>فرستنده:</strong> {{ result.sender }}</li>
+          {% endif %}
+          {% if result.receiver %}
+          <li><strong>گیرنده:</strong> {{ result.receiver }}</li>
+          {% endif %}
+        </ul>
+      </section>
+
+      <section class="events">
+        <h2>جزئیات رهگیری</h2>
+        {% if result.events %}
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>تاریخ</th>
+                <th>ساعت</th>
+                <th>مکان</th>
+                <th>شرح وضعیت</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for event in result.events %}
+              <tr>
+                <td>{{ event.date or '-' }}</td>
+                <td>{{ event.time or '-' }}</td>
+                <td>{{ event.location or '-' }}</td>
+                <td>{{ event.description }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p>اطلاعاتی برای نمایش وجود ندارد.</p>
+        {% endif %}
+      </section>
+
+      <section class="raw-response">
+        <details>
+          <summary>مشاهده پاسخ کامل سرویس</summary>
+          <pre>{{ result.raw_response | tojson(indent=2) }}</pre>
+        </details>
+      </section>
+      {% endif %}
+
+      <footer>
+        <p>
+          این سرویس به صورت متن‌باز و صرفاً جهت سهولت رهگیری مرسولات پست ایران
+          ارائه شده است.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
